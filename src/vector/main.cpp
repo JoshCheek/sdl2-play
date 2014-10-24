@@ -1,13 +1,21 @@
 // uhm, tried going through this http://www.aaroncox.net/tutorials/2dtutorials/sdl_gfx.pdf
 // but it's for SDL1, so this is mostly me reading the header files and doing my best to translate
 // or deviating in whatever way makes sense to me
+#undef _SDL_H
 #include <iostream>
-#include <SDL2/SDL.h>
-#include "SDL2/SDL2_gfxPrimitives.h"
+#include <SDL.h>
+#include "SDL2_gfxPrimitives.h"
+
 
 int main(int argc, char **argv)
 {
-  if (SDL_Init(SDL_INIT_EVERYTHING) != 0){
+  // SDL_INIT_EVERYTHING: SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER
+  // this blows up due to not supporting threads.
+  // Looking at https://github.com/gsathya/SDL-emscripten/wiki/API
+  // to get a list of what I can turn on (I have no idea what most of this stuff does, or what I need)
+  // Removed: SDL_INIT_HAPTIC <-- not built with whatever this is
+  //          SDL_TIMER       <-- apparently requires thread support, which SDL-emscripten doesn't support
+  if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0){
     std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
     return 1;
   }
@@ -23,7 +31,7 @@ int main(int argc, char **argv)
 
   // uhm, the thing that draws?
   //                                          -1 means "select first that meets reqs"
-  SDL_Renderer *ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  SDL_Renderer *ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
   if (ren == nullptr){
     SDL_DestroyWindow(win);
     std::cout << "SDL_CreateRenderer Error: " << SDL_GetError() << std::endl;
@@ -35,6 +43,14 @@ int main(int argc, char **argv)
   SDL_RenderClear(ren);
 
   // I guess this draws the rectangle on it?
+  // on emscripten, this is where it blows up.
+  // says "exception thrown: TypeError: Cannot read property 'locked' of undefined,TypeError: Cannot read property 'locked' of undefined"
+  // It seems the js expects the first argument to be a surface:
+  //   }};function _rectangleColor(surf, x1, y1, x2, y2, color) {
+  //     return SDL_gfx.drawRectangle(surf, x1, y1, x2, y2, 'stroke', SDL_gfx.translateColorToCSSRGBA(color));
+  //
+  // Even though the C expects it to be a renderer:
+  //    SDL2_GFXPRIMITIVES_SCOPE int rectangleColor(SDL_Renderer * renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color);
   rectangleRGBA(
     ren,
     0,   0,          // Sint16 x1, Sint16 y1,
