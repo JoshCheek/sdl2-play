@@ -1,7 +1,6 @@
 CXX = clang++
-SDL = -framework SDL2
-CXXFLAGS = -Wall -c -std=c++11 -I ../../include
-LDFLAGS = $(SDL)
+CXXFLAGS = -Wall -c -std=c++11 -I ../../include -I/usr/local/include/SDL2 -D_THREAD_SAFE
+LDFLAGS = -L/usr/local/lib -lSDL2
 EXE = SDL_Lesson0
 POSTSCRIPT_EXE = SDL_Postscript
 
