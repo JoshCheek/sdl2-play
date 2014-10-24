@@ -1,0 +1,3 @@
+[submodule "src/vector/SDL-emscripten"]
+	path = src/vector/SDL-emscripten
+	url = https://github.com/gsathya/SDL-emscripten.git
